@@ -75,7 +75,7 @@ let lastFillAt = 0;
 async function tryAutofill() {
     // Avoid spamming in SPAs
     const now = Date.now();
-    if (now - lastFillAt < 2000) return;
+    if (now - lastFillAt < 3000) return;
 
     const otpInput = findBestOtpInput();
     if (!otpInput) return;

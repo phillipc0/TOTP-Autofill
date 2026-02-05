@@ -1,71 +1,46 @@
-// MV3 service worker (module)
+// MV2 background script
 
 const api = globalThis.browser ?? globalThis.chrome;
-
 const STORAGE_KEY = "totpEntries";
 
-/**
- * Entry schema (stored in storage.local):
- * {
- *   "https://example.com": { secretBase32: "JBSWY3DPEHPK3PXP", digits: 6, period: 30 }
- * }
- */
+api.runtime.onMessage.addListener((msg, sender) => {
+    return (async () => {
+        if (!msg || !msg.type) return;
 
-api.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-    (async () => {
-        try {
-            if (!msg || !msg.type) return;
-
-            if (msg.type === "GET_ENTRY") {
-                const origin = normalizeOrigin(msg.origin);
-                const entry = await getEntry(origin);
-                sendResponse({ ok: true, entry });
-                return;
-            }
-
-            if (msg.type === "SET_ENTRY") {
-                const origin = normalizeOrigin(msg.origin);
-                const { secretBase32, digits, period } = msg.entry ?? {};
-
-                validateEntry({ secretBase32, digits, period });
-
-                await setEntry(origin, { secretBase32, digits, period });
-                sendResponse({ ok: true });
-                return;
-            }
-
-            if (msg.type === "DELETE_ENTRY") {
-                const origin = normalizeOrigin(msg.origin);
-                await deleteEntry(origin);
-                sendResponse({ ok: true });
-                return;
-            }
-
-            if (msg.type === "GET_TOTP") {
-                const origin = normalizeOrigin(msg.origin);
-                const entry = await getEntry(origin);
-                if (!entry) {
-                    sendResponse({ ok: false, error: "No TOTP configured for this site." });
-                    return;
-                }
-                const code = await totp(entry.secretBase32, entry.period ?? 30, entry.digits ?? 6);
-                const nowSec = Math.floor(Date.now() / 1000);
-                const remaining = (entry.period ?? 30) - (nowSec % (entry.period ?? 30));
-                sendResponse({ ok: true, code, remaining });
-                return;
-            }
-
-        } catch (e) {
-            sendResponse({ ok: false, error: String(e?.message ?? e) });
+        if (msg.type === "GET_ENTRY") {
+            const origin = normalizeOrigin(msg.origin);
+            const entry = await getEntry(origin);
+            return { ok: true, entry };
         }
-    })();
 
-    // Indicate async response
-    return true;
+        if (msg.type === "SET_ENTRY") {
+            const origin = normalizeOrigin(msg.origin);
+            const { secretBase32, digits, period } = msg.entry ?? {};
+            validateEntry({ secretBase32, digits, period });
+            await setEntry(origin, { secretBase32, digits, period });
+            return { ok: true };
+        }
+
+        if (msg.type === "DELETE_ENTRY") {
+            const origin = normalizeOrigin(msg.origin);
+            await deleteEntry(origin);
+            return { ok: true };
+        }
+
+        if (msg.type === "GET_TOTP") {
+            const origin = normalizeOrigin(msg.origin);
+            const entry = await getEntry(origin);
+            if (!entry) return { ok: false, error: "No TOTP configured for this site." };
+
+            const code = await totp(entry.secretBase32, entry.period ?? 30, entry.digits ?? 6);
+            const nowSec = Math.floor(Date.now() / 1000);
+            const remaining = (entry.period ?? 30) - (nowSec % (entry.period ?? 30));
+            return { ok: true, code, remaining };
+        }
+    })().catch((e) => ({ ok: false, error: String(e?.message ?? e) }));
 });
 
 function normalizeOrigin(origin) {
-    // Accept full URLs, too.
     const u = new URL(origin);
     return u.origin;
 }
@@ -112,13 +87,12 @@ async function deleteEntry(origin) {
     await setAllEntries(entries);
 }
 
-/* ---------------- TOTP implementation (RFC 6238 defaults) ---------------- */
+/* ---------------- TOTP (RFC 6238 defaults) ---------------- */
 
 async function totp(secretBase32, period = 30, digits = 6) {
     const keyBytes = base32Decode(secretBase32);
     const counter = Math.floor(Date.now() / 1000 / period);
 
-    // HOTP: HMAC-SHA1(key, counter_8bytes_be)
     const counterBytes = new Uint8Array(8);
     let x = counter;
     for (let i = 7; i >= 0; i--) {
@@ -144,12 +118,10 @@ async function totp(secretBase32, period = 30, digits = 6) {
         (hmac[offset + 3] & 0xff);
 
     const mod = 10 ** digits;
-    const otp = String(binCode % mod).padStart(digits, "0");
-    return otp;
+    return String(binCode % mod).padStart(digits, "0");
 }
 
 function base32Decode(input) {
-    // RFC 4648 Base32, accepts padding "=", ignores spaces
     const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
     const clean = input.toUpperCase().replace(/=+$/g, "").replace(/\s+/g, "");
     if (!clean.length) return new Uint8Array();
