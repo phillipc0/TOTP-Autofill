@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>TOTP Autofill - Options</title>
+    <style>
+        body { font: 14px system-ui, sans-serif; margin: 16px; max-width: 900px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+        th, td { border-bottom: 1px solid #ddd; padding: 8px; text-align: left; }
+        code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+        .muted { color: #666; }
+    </style>
+</head>
+<body>
+<h2>TOTP Autofill - Stored Sites</h2>
+<p class="muted">Secrets are stored in <code>storage.local</code>. Treat this as sensitive data.</p>
+
+<table>
+    <thead>
+    <tr>
+        <th>Origin</th>
+        <th>Digits</th>
+        <th>Period</th>
+        <th></th>
+    </tr>
+    </thead>
+    <tbody id="rows"></tbody>
+</table>
+
+<script src="options.js"></script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "TOTP Autofill (Minimal)",
+  "version": "1.0.0",
+  "description": "Store a TOTP secret per site and autofill one-time codes.",
+  "action": {
+    "default_title": "TOTP Autofill",
+    "default_popup": "popup.html"
+  },
+  "options_page": "options.html",
+  "permissions": ["storage", "activeTab", "scripting"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "service_worker.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
