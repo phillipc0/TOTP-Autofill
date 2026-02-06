@@ -10,34 +10,40 @@ api.runtime.onMessage.addListener((msg, sender) => {
         if (msg.type === "GET_ENTRY") {
             const origin = normalizeOrigin(msg.origin);
             const entry = await getEntry(origin);
-            return { ok: true, entry };
+            return {ok: true, entry};
         }
 
         if (msg.type === "SET_ENTRY") {
             const origin = normalizeOrigin(msg.origin);
-            const { secretBase32, digits, period } = msg.entry ?? {};
-            validateEntry({ secretBase32, digits, period });
-            await setEntry(origin, { secretBase32, digits, period });
-            return { ok: true };
+            const {secretBase32, digits, period} = msg.entry ?? {};
+            validateEntry({secretBase32, digits, period});
+            await setEntry(origin, {secretBase32, digits, period});
+            return {ok: true};
         }
 
         if (msg.type === "DELETE_ENTRY") {
             const origin = normalizeOrigin(msg.origin);
             await deleteEntry(origin);
-            return { ok: true };
+            return {ok: true};
+        }
+
+        if (msg.type === "HAS_ENTRY") {
+            const origin = normalizeOrigin(msg.origin);
+            const entry = await getEntry(origin);
+            return {ok: true, has: !!entry};
         }
 
         if (msg.type === "GET_TOTP") {
             const origin = normalizeOrigin(msg.origin);
             const entry = await getEntry(origin);
-            if (!entry) return { ok: false, error: "No TOTP configured for this site." };
+            if (!entry) return {ok: false, error: "No TOTP configured for this site."};
 
             const code = await totp(entry.secretBase32, entry.period ?? 30, entry.digits ?? 6);
             const nowSec = Math.floor(Date.now() / 1000);
             const remaining = (entry.period ?? 30) - (nowSec % (entry.period ?? 30));
-            return { ok: true, code, remaining };
+            return {ok: true, code, remaining};
         }
-    })().catch((e) => ({ ok: false, error: String(e?.message ?? e) }));
+    })().catch((e) => ({ok: false, error: String(e?.message ?? e)}));
 });
 
 function normalizeOrigin(origin) {
@@ -45,7 +51,7 @@ function normalizeOrigin(origin) {
     return u.origin;
 }
 
-function validateEntry({ secretBase32, digits, period }) {
+function validateEntry({secretBase32, digits, period}) {
     if (typeof secretBase32 !== "string" || secretBase32.trim().length < 8) {
         throw new Error("Secret must be a Base32 string (usually 16+ chars).");
     }
@@ -63,7 +69,7 @@ async function getAllEntries() {
 }
 
 async function setAllEntries(entries) {
-    await api.storage.local.set({ [STORAGE_KEY]: entries });
+    await api.storage.local.set({[STORAGE_KEY]: entries});
 }
 
 async function getEntry(origin) {
@@ -103,7 +109,7 @@ async function totp(secretBase32, period = 30, digits = 6) {
     const cryptoKey = await crypto.subtle.importKey(
         "raw",
         keyBytes,
-        { name: "HMAC", hash: "SHA-1" },
+        {name: "HMAC", hash: "SHA-1"},
         false,
         ["sign"]
     );

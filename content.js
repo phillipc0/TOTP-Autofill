@@ -67,12 +67,16 @@ function findBestOtpInput() {
 function setInputValue(input, value) {
     input.focus();
     input.value = value;
-    input.dispatchEvent(new Event("input", { bubbles: true }));
-    input.dispatchEvent(new Event("change", { bubbles: true }));
+    input.dispatchEvent(new Event("input", {bubbles: true}));
+    input.dispatchEvent(new Event("change", {bubbles: true}));
 }
 
 let lastFillAt = 0;
+let runs = 0;
+
 async function tryAutofill() {
+    runs++;
+    console.debug("[TOTP autofill] tryAutofill runs:", runs);
     // Avoid spamming in SPAs
     const now = Date.now();
     if (now - lastFillAt < 3000) return;
@@ -84,24 +88,39 @@ async function tryAutofill() {
     if (/^\d{6,8}$/.test((otpInput.value || "").trim())) return;
 
     const origin = getOrigin();
-    const resp = await api.runtime.sendMessage({ type: "GET_TOTP", origin });
+    const resp = await api.runtime.sendMessage({type: "GET_TOTP", origin});
     if (!resp?.ok) return;
 
     setInputValue(otpInput, resp.code);
     lastFillAt = now;
 }
 
-function start() {
-    // Initial attempt
-    tryAutofill();
+let enabled = false;
+let t = 0;
+let lastRun = 0;
 
-    // Try again after short delay (late-loaded forms)
-    setTimeout(tryAutofill, 800);
-    setTimeout(tryAutofill, 2000);
+async function init() {
+    const resp = await api.runtime.sendMessage({type: "HAS_ENTRY", origin: location.origin});
+    enabled = !!resp?.ok && !!resp.has;
+    if (!enabled) return;
 
-    // Observe DOM changes (SPAs)
-    const mo = new MutationObserver(() => tryAutofill());
-    mo.observe(document.documentElement, { subtree: true, childList: true, attributes: true });
+    schedule();
+    setTimeout(schedule, 800);
+    setTimeout(schedule, 2000);
+
+    const mo = new MutationObserver(schedule);
+    mo.observe(document.documentElement, {subtree: true, childList: true}); // no attributes
 }
 
-start();
+function schedule() {
+    if (!enabled) return;
+    const now = Date.now();
+    if (now - lastRun < 1500) return;
+    clearTimeout(t);
+    t = setTimeout(() => {
+        lastRun = Date.now();
+        tryAutofill();
+    }, 150);
+}
+
+init();

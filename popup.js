@@ -1,6 +1,9 @@
 const api = globalThis.browser ?? globalThis.chrome;
 
-function $(id) { return document.getElementById(id); }
+function $(id) {
+    return document.getElementById(id);
+}
+
 function setStatus(msg, ok = true) {
     const el = $("status");
     el.textContent = msg;
@@ -8,7 +11,7 @@ function setStatus(msg, ok = true) {
 }
 
 async function getActiveTab() {
-    const tabs = await api.tabs.query({ active: true, currentWindow: true });
+    const tabs = await api.tabs.query({active: true, currentWindow: true});
     return tabs[0];
 }
 
@@ -22,7 +25,7 @@ async function load() {
 
     $("site").textContent = origin;
 
-    const res = await api.runtime.sendMessage({ type: "GET_ENTRY", origin });
+    const res = await api.runtime.sendMessage({type: "GET_ENTRY", origin});
     if (res?.ok && res.entry) {
         $("secret").value = res.entry.secretBase32 ?? "";
         $("digits").value = String(res.entry.digits ?? 6);
@@ -41,7 +44,7 @@ async function save() {
             period: Number($("period").value || 30)
         };
 
-        const res = await api.runtime.sendMessage({ type: "SET_ENTRY", origin, entry });
+        const res = await api.runtime.sendMessage({type: "SET_ENTRY", origin, entry});
         if (!res?.ok) throw new Error(res?.error || "Save failed");
 
         setStatus("Saved.");
@@ -55,7 +58,7 @@ async function del() {
         const tab = await getActiveTab();
         const origin = originFromUrl(tab.url);
 
-        const res = await api.runtime.sendMessage({ type: "DELETE_ENTRY", origin });
+        const res = await api.runtime.sendMessage({type: "DELETE_ENTRY", origin});
         if (!res?.ok) throw new Error(res?.error || "Delete failed");
 
         $("secret").value = "";
@@ -67,4 +70,15 @@ async function del() {
 
 $("save").addEventListener("click", save);
 $("delete").addEventListener("click", del);
+
+document.getElementById("openOptions").addEventListener("click", async () => {
+    // Works in Firefox and Chrome
+    if (api.runtime.openOptionsPage) {
+        await api.runtime.openOptionsPage();
+    } else {
+        // fallback
+        window.open(api.runtime.getURL("options.html"));
+    }
+});
+
 load();
