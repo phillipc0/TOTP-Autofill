@@ -23,12 +23,13 @@ and cannot guaranty the TOTP secrets are secured from malicious websites or othe
 
 ### Install over Firefox Extensions (Recommended)
 
-1. Visit: [URL] or search for "TOTP Autofill" in the extension store
+1. Visit: https://addons.mozilla.org/de/firefox/addon/totp-autofill/ or search for "TOTP Autofill" in the extension
+   store
 2. Click Add to Firefox (Optionally: Allow in private windows) and confirm
 
 ### Install manually with .xpi file
 
-1. Visit GitHub Releases [URL]
+1. Visit [GitHub Releases](https://github.com/phillipc0/TOTP-Autofill/releases)
 2. Download the .xpi file of the newest release
 3. Either:
     1. Drag the file from the file explorer into a Firefox window and confirm
@@ -48,4 +49,4 @@ Simply create an Issue in GitHub and respond to any comments by me.
 
 ## License
 
-I still do not understand what to put here.
+MPL2.0

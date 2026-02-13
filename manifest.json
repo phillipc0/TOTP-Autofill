@@ -1,8 +1,8 @@
 {
   "manifest_version": 2,
-  "name": "TOTP Autofill (Minimal)",
+  "name": "TOTP Autofill",
   "version": "1.0.0",
-  "description": "Store a TOTP secret per site and autofill one-time codes.",
+  "description": "Store a TOTP secret per site, then the extension autofills the one-time codes into matching input fields. Source code and feature requests are available on GitHub: https://github.com/phillipc0/TOTP-Autofill",
   "permissions": [
     "storage",
     "tabs",
@@ -31,5 +31,19 @@
       ],
       "run_at": "document_idle"
     }
-  ]
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "totp-autofill@phillipc0.github.com",
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ]
+      }
+    }
+  },
+  "icons": {
+    "48": "icon-48.png",
+    "96": "icon-96.png"
+  }
 }
