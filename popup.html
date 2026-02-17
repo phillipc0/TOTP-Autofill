@@ -1,68 +1,180 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title><!doctype html>
-        <html>
-        <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width,initial-scale=1" />
-        <title>TOTP Autofill</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>TOTP Autofill</title>
     <style>
-        body { font: 13px system-ui, sans-serif; margin: 12px; width: 320px; }
-        label { display: block; margin: 10px 0 4px; font-weight: 600; }
-        input { width: 100%; box-sizing: border-box; padding: 8px; }
-        .row { display: flex; gap: 8px; }
-        .row > div { flex: 1; }
-        button { padding: 8px 10px; cursor: pointer; }
-        .actions { display: flex; gap: 8px; margin-top: 12px; }
-        .muted { color: #666; margin-top: 6px; font-size: 12px; }
-        .status { margin-top: 8px; min-height: 18px; }
+        body {
+            font: 13px system-ui, sans-serif;
+            margin: 12px;
+            width: 320px;
+        }
+
+        #site {
+            font-weight: 600;
+            margin-bottom: 10px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        label {
+            display: block;
+            margin: 10px 0 4px;
+            font-weight: 600;
+        }
+
+        input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 8px;
+        }
+
+        .row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .row > * {
+            flex: 1;
+        }
+
+        button {
+            appearance: none;
+            border: 1px solid #d0d5dd;
+            background: #ffffff;
+            color: #1f2937;
+            font: 500 13px system-ui, sans-serif;
+            padding: 7px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 120ms ease,
+            border-color 120ms ease,
+            box-shadow 120ms ease,
+            transform 40ms ease;
+        }
+
+        button:hover {
+            background: #f3f4f6;
+            border-color: #cbd5e1;
+        }
+
+        button:active {
+            transform: translateY(1px);
+            background: #e5e7eb;
+        }
+
+        button:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.35);
+            border-color: #3b82f6;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        button.primary {
+            padding: 7px 16px;
+            background: #2563eb;
+            border-color: #2563eb;
+            color: #ffffff;
+        }
+
+        button.primary:hover {
+            background: #1d4ed8;
+            border-color: #1d4ed8;
+        }
+
+        button.primary:active {
+            background: #1e40af;
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .status {
+            margin-top: 8px;
+            min-height: 18px;
+            font-size: 12px;
+        }
+
+        /* Advanced toggle */
+        .adv-toggle {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 10px;
+            cursor: pointer;
+            user-select: none;
+            color: #333;
+        }
+
+        .chev {
+            display: inline-block;
+            transition: transform .12s ease;
+        }
+
+        .adv-open .chev {
+            transform: rotate(90deg);
+        }
+
+        #advanced {
+            display: none;
+            margin-top: 8px;
+        }
+
+        .adv-open #advanced {
+            display: block;
+        }
     </style>
 </head>
 <body>
-<div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-    <div><strong id="site"></strong></div>
-    <button id="openOptions" title="Settings"
-            style="border:none; background:transparent; padding:6px; border-radius:8px; cursor:pointer;">
-        <!-- Simple gear icon (inline SVG) -->
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" stroke="currentColor" stroke-width="2"/>
-            <path d="M19.4 15a7.8 7.8 0 0 0 .1-1l2-1.5-2-3.5-2.4.5a7.2 7.2 0 0 0-1.7-1l-.4-2.4H10l-.4 2.4a7.2 7.2 0 0 0-1.7 1L5.5 9 3.5 12.5 5.5 14a7.8 7.8 0 0 0 .1 1l-2 1.5 2 3.5 2.4-.5a7.2 7.2 0 0 0 1.7 1l.4 2.4h4.2l.4-2.4a7.2 7.2 0 0 0 1.7-1l2.4.5 2-3.5-2-1.5Z"
-                  stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-        </svg>
-    </button>
+<div id="site"></div>
+
+<label for="secret">Secret (Base32)</label>
+<input id="secret" placeholder="JBSWY3DPEHPK3PXP" autocomplete="off"/>
+
+<label for="code">Code</label>
+<div class="row">
+    <input id="code" readonly placeholder="—"/>
+    <button id="copy" style="flex:0 0 auto;">Copy</button>
 </div>
 
-<div class="muted">Stores a TOTP secret for this site origin and autofills codes on matching pages.</div>
-
-<label for="secret">TOTP secret (Base32)</label>
-<input id="secret" placeholder="e.g. JBSWY3DPEHPK3PXP" autocomplete="off" />
-
-<div class="row">
-    <div>
-        <label for="digits">Digits</label>
-        <input id="digits" type="number" min="6" max="8" value="6" />
+<div id="advWrap">
+    <div class="adv-toggle" id="advToggle" role="button" aria-expanded="false" tabindex="0">
+        <span class="chev">›</span>
+        <span>Advanced</span>
     </div>
-    <div>
-        <label for="period">Period (sec)</label>
-        <input id="period" type="number" min="15" max="120" value="30" />
+
+    <div id="advanced">
+        <div class="row">
+            <div>
+                <label for="digits">Digits</label>
+                <input id="digits" type="number" min="6" max="8" value="6"/>
+            </div>
+            <div>
+                <label for="period">Period</label>
+                <input id="period" type="number" min="15" max="120" value="30"/>
+            </div>
+        </div>
     </div>
 </div>
 
 <div class="actions">
-    <button id="save">Save</button>
+    <button class="primary" id="save">Save</button>
     <button id="delete">Delete</button>
+    <button id="openOptions">Options</button>
 </div>
 
 <div class="status" id="status"></div>
 
 <script src="popup.js"></script>
-</body>
-</html>
-</title>
-</head>
-<body>
-
 </body>
 </html>
