@@ -1,50 +1,65 @@
-// MV2 background script
+// MV2 & 3 background script/service worker
 
 const api = globalThis.browser ?? globalThis.chrome;
 const STORAGE_KEY = "totpEntries";
 
-api.runtime.onMessage.addListener((msg, sender) => {
-    return (async () => {
-        if (!msg || !msg.type) return;
-
-        if (msg.type === "GET_ENTRY") {
-            const origin = normalizeOrigin(msg.origin);
-            const entry = await getEntry(origin);
-            return {ok: true, entry};
+api.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+    (async () => {
+        try {
+            const res = await handleMessage(msg);
+            // IMPORTANT: always respond with an object (never undefined)
+            sendResponse(res ?? {ok: false, error: "No response from handler."});
+        } catch (e) {
+            sendResponse({ok: false, error: String(e?.message ?? e)});
         }
+    })();
 
-        if (msg.type === "SET_ENTRY") {
-            const origin = normalizeOrigin(msg.origin);
-            const {secretBase32, digits, period} = msg.entry ?? {};
-            validateEntry({secretBase32, digits, period});
-            await setEntry(origin, {secretBase32, digits, period});
-            return {ok: true};
-        }
-
-        if (msg.type === "DELETE_ENTRY") {
-            const origin = normalizeOrigin(msg.origin);
-            await deleteEntry(origin);
-            return {ok: true};
-        }
-
-        if (msg.type === "HAS_ENTRY") {
-            const origin = normalizeOrigin(msg.origin);
-            const entry = await getEntry(origin);
-            return {ok: true, has: !!entry};
-        }
-
-        if (msg.type === "GET_TOTP") {
-            const origin = normalizeOrigin(msg.origin);
-            const entry = await getEntry(origin);
-            if (!entry) return {ok: false, error: "No TOTP configured for this site."};
-
-            const code = await totp(entry.secretBase32, entry.period ?? 30, entry.digits ?? 6);
-            const nowSec = Math.floor(Date.now() / 1000);
-            const remaining = (entry.period ?? 30) - (nowSec % (entry.period ?? 30));
-            return {ok: true, code, remaining};
-        }
-    })().catch((e) => ({ok: false, error: String(e?.message ?? e)}));
+    // IMPORTANT: keep the message channel open for async response
+    return true;
 });
+
+async function handleMessage(msg) {
+    if (!msg?.type) return;
+
+    if (msg.type === "HAS_ENTRY") {
+        const origin = normalizeOrigin(msg.origin);
+        const entry = await getEntry(origin);
+        return {ok: true, has: !!entry};
+    }
+
+    if (msg.type === "GET_ENTRY") {
+        const origin = normalizeOrigin(msg.origin);
+        const entry = await getEntry(origin);
+        return {ok: true, entry};
+    }
+
+    if (msg.type === "SET_ENTRY") {
+        const origin = normalizeOrigin(msg.origin);
+        const {secretBase32, digits, period} = msg.entry ?? {};
+        validateEntry({secretBase32, digits, period});
+        await setEntry(origin, {secretBase32, digits, period});
+        return {ok: true};
+    }
+
+    if (msg.type === "DELETE_ENTRY") {
+        const origin = normalizeOrigin(msg.origin);
+        await deleteEntry(origin);
+        return {ok: true};
+    }
+
+    if (msg.type === "GET_TOTP") {
+        const origin = normalizeOrigin(msg.origin);
+        const entry = await getEntry(origin);
+        if (!entry) return {ok: false, error: "No TOTP configured for this site."};
+
+        const code = await totp(entry.secretBase32, entry.period ?? 30, entry.digits ?? 6);
+        const nowSec = Math.floor(Date.now() / 1000);
+        const remaining = (entry.period ?? 30) - (nowSec % (entry.period ?? 30));
+        return {ok: true, code, remaining};
+    }
+
+    return {ok: false, error: `Unknown message type: ${msg.type}`};
+}
 
 function normalizeOrigin(origin) {
     const u = new URL(origin);

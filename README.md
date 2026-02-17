@@ -1,6 +1,6 @@
-# TOTP Autofill (Firefox MV2 Extension)
+# TOTP Autofill (Firefox & Chrome MV3 Extension)
 
-Firefox Add-On that automatically fills in 2FA codes for each website
+Browser Add-On that automatically fills in 2FA codes for each website
 
 ## Disclaimer
 
@@ -27,13 +27,20 @@ and cannot guaranty the TOTP secrets are secured from malicious websites or othe
    store
 2. Click Add to Firefox (Optionally: Allow in private windows) and confirm
 
-### Install manually with .xpi file
+### Install manually with .zip file
+
+Warning: You will **not** receive any automatic updates using this method.
 
 1. Visit [GitHub Releases](https://github.com/phillipc0/TOTP-Autofill/releases)
-2. Download the .xpi file of the newest release
-3. Either:
-    1. Drag the file from the file explorer into a Firefox window and confirm
-    2. Open the file with Firefox and confirm
+2. Download the .zip file of the newest release
+3. For:
+    1. Chrome:
+        1. Unpack the .zip file into a permanent location
+        2. Visit `chrome://extensions` and enable developer mode (top-left)
+        3. Click load extension and select the folder containing the extension files
+    2. Firefox, either:
+        1. Drag the file from the file explorer into a Firefox window and confirm
+        2. Open the file with Firefox and confirm
 
 ## Development
 
@@ -41,7 +48,10 @@ To temporarily build the extension yourself and change its functionality:
 
 1. Clone/Fork the repository
 2. Do your changes to the code
-3. Visit `about:debugging` in Firefox and click on load temporary add-on, there select the manifest.json
+3. For:
+    1. Firefox: Visit `about:debugging` and click on load temporary add-on, there select the manifest.json
+    2. Chrome: Visit `chrome://extensions` and click on load extension, there select the folder containing the
+       manifest.json
 
 ## Feature Requests
 

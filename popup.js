@@ -1,5 +1,19 @@
 const api = globalThis.browser ?? globalThis.chrome;
 
+function sendMessage(msg) {
+    // Firefox (browser.*): promise API
+    if (api.runtime.sendMessage.length === 1) return api.runtime.sendMessage(msg);
+
+    // Chrome (chrome.*): callback API + lastError
+    return new Promise((resolve, reject) => {
+        api.runtime.sendMessage(msg, (resp) => {
+            const err = api.runtime.lastError;
+            if (err) reject(new Error(err.message));
+            else resolve(resp);
+        });
+    });
+}
+
 function $(id) {
     return document.getElementById(id);
 }
@@ -25,7 +39,7 @@ async function load() {
 
     $("site").textContent = origin;
 
-    const res = await api.runtime.sendMessage({type: "GET_ENTRY", origin});
+    const res = await sendMessage({type: "GET_ENTRY", origin});
     if (res?.ok && res.entry) {
         $("secret").value = res.entry.secretBase32 ?? "";
         $("digits").value = String(res.entry.digits ?? 6);
@@ -44,7 +58,7 @@ async function save() {
             period: Number($("period").value || 30)
         };
 
-        const res = await api.runtime.sendMessage({type: "SET_ENTRY", origin, entry});
+        const res = await sendMessage({type: "SET_ENTRY", origin, entry});
         if (!res?.ok) throw new Error(res?.error || "Save failed");
 
         setStatus("Saved.");
@@ -58,7 +72,7 @@ async function del() {
         const tab = await getActiveTab();
         const origin = originFromUrl(tab.url);
 
-        const res = await api.runtime.sendMessage({type: "DELETE_ENTRY", origin});
+        const res = await sendMessage({type: "DELETE_ENTRY", origin});
         if (!res?.ok) throw new Error(res?.error || "Delete failed");
 
         $("secret").value = "";

@@ -1,5 +1,19 @@
 const api = globalThis.browser ?? globalThis.chrome;
 
+function sendMessage(msg) {
+    // Firefox (browser.*): promise API
+    if (api.runtime.sendMessage.length === 1) return api.runtime.sendMessage(msg);
+
+    // Chrome (chrome.*): callback API + lastError
+    return new Promise((resolve, reject) => {
+        api.runtime.sendMessage(msg, (resp) => {
+            const err = api.runtime.lastError;
+            if (err) reject(new Error(err.message));
+            else resolve(resp);
+        });
+    });
+}
+
 function getOrigin() {
     return location.origin;
 }
@@ -89,7 +103,7 @@ async function tryAutofill() {
     if (/^\d{6,8}$/.test((otpInput.value || "").trim())) return;
 
     const origin = getOrigin();
-    const resp = await api.runtime.sendMessage({type: "GET_TOTP", origin});
+    const resp = await sendMessage({type: "GET_TOTP", origin});
     if (!resp?.ok) return;
 
     setInputValue(otpInput, resp.code);
@@ -101,7 +115,7 @@ let t = 0;
 let lastRun = 0;
 
 async function init() {
-    const resp = await api.runtime.sendMessage({type: "HAS_ENTRY", origin: location.origin});
+    const resp = await sendMessage({type: "HAS_ENTRY", origin: location.origin});
     enabled = !!resp?.ok && !!resp.has;
     if (!enabled) return;
 
