@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "TOTP Autofill",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Store a TOTP secret per site, then the extension autofills the one-time codes into matching input fields. Source code and feature requests are available on GitHub: https://github.com/phillipc0/TOTP-Autofill",
   "permissions": [
     "storage",

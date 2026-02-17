@@ -40,7 +40,7 @@ function scoreOtpInput(input) {
     if (maxLen === 8) s += 10;
 
     // De-prioritize obvious non-OTP fields
-    if (/(search|email|user|name|pass)/.test(hay)) s -= 50;
+    if (/(search|email|username|name|pass)/.test(hay)) s -= 50;
     if (type === "password") s -= 100;
 
     return s;
@@ -60,6 +60,7 @@ function findBestOtpInput() {
     }
 
     // Require some minimum confidence
+    console.debug("Best score: " + bestScore + " for input id: " + best.id);
     if (bestScore < 35) return null;
     return best;
 }
@@ -109,7 +110,13 @@ async function init() {
     setTimeout(schedule, 2000);
 
     const mo = new MutationObserver(schedule);
-    mo.observe(document.documentElement, {subtree: true, childList: true}); // no attributes
+    mo.observe(document.documentElement, {
+        subtree: true,
+        childList: true,
+        // Consider enabling if problems occur on some sites
+        // attributes: true,
+        // attributeFilter: ["hidden", "aria-hidden"]
+    });
 }
 
 function schedule() {
