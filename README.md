@@ -27,20 +27,19 @@ and cannot guaranty the TOTP secrets are secured from malicious websites or othe
    store
 2. Click Add to Firefox (Optionally: Allow in private windows) and confirm
 
-### Install manually with .zip file
+### Install manually with .zip/.xpi file (Chrome & Alternative)
 
 Warning: You will **not** receive any automatic updates using this method.
 
 1. Visit [GitHub Releases](https://github.com/phillipc0/TOTP-Autofill/releases)
-2. Download the .zip file of the newest release
-3. For:
-    1. Chrome:
-        1. Unpack the .zip file into a permanent location
-        2. Visit `chrome://extensions` and enable developer mode (top-left)
-        3. Click load extension and select the folder containing the extension files
-    2. Firefox, either:
-        1. Drag the file from the file explorer into a Firefox window and confirm
-        2. Open the file with Firefox and confirm
+2. Download the .zip/.xpi file of the newest release
+3. For **Chrome**:
+    1. Unpack the .zip file into a permanent location
+    2. Visit `chrome://extensions` and enable developer mode (top-left)
+    3. Click load extension and select the folder containing the extension files
+4. For **Firefox**, either:
+    1. Drag the .xpi file from the file explorer into a Firefox window and confirm
+    2. Open the .xpi file with Firefox and confirm
 
 ## Development
 
